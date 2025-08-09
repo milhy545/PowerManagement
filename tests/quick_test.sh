@@ -56,7 +56,7 @@ if [[ -n "$TEMP_OUTPUT" ]]; then
 else
     echo -e "${Y}Info:${NC} No sensors detected. Skipping temperature test."
     PASSED=$((PASSED + 1)) # Count as passed since it's expected in CI
-fi"
+fi
 
 # CPU model detection  
 CPU_MODEL=$(grep "model name" /proc/cpuinfo | head -1 | awk -F': ' '{print $2}' 2>/dev/null || echo "")
