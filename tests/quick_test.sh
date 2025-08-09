@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 # Quick Test Suite - Fast validation of core functionality
 
 set -euo pipefail
