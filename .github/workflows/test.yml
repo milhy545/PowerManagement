@@ -47,14 +47,6 @@ jobs:
         chmod +x tests/*.sh
         chmod +x src/frequency/cpu_frequency_manager.py
         
-    - name: 🐛 Display test script content
-      run: |
-        cat ./tests/quick_test.sh
-        
-    - name:  hashlib-check
-      run: |
-        sha256sum ./tests/quick_test.sh
-        
     - name: 🧪 Run quick test suite
       run: |
         ./tests/quick_test.sh

@@ -25,12 +25,12 @@ test_result() {
     fi
 }
 
-echo "⚡ PowerManagement Quick Test Suite"
+echo "PowerManagement Quick Test Suite"
 echo "==================================="
 
 # Test 1: Core files exist
 echo
-echo "📁 File Structure Tests:"
+echo "File Structure Tests:"
 test_result $(test -f "$PROJECT_DIR/src/frequency/cpu_frequency_manager.py" && echo 0 || echo 1) "CPU Frequency Manager exists"
 
 test_result $(test -f "$PROJECT_DIR/scripts/performance_manager.sh" && echo 0 || echo 1) "Performance Manager exists"
@@ -39,14 +39,14 @@ test_result $(test -d "$PROJECT_DIR/examples/ai_workloads" && echo 0 || echo 1) 
 
 # Test 2: Scripts are executable
 echo
-echo "🔧 Executable Tests:"
+echo "Executable Tests:"
 test_result $(test -x "$PROJECT_DIR/src/frequency/cpu_frequency_manager.py" && echo 0 || echo 1) "CPU Frequency Manager is executable"
 
 test_result $(test -x "$PROJECT_DIR/scripts/performance_manager.sh" && echo 0 || echo 1) "Performance Manager is executable"
 
 # Test 3: Basic functionality
 echo
-echo "⚙️ Functionality Tests:"
+echo "Functionality Tests:"
 
 # Temperature reading
 TEMP_OUTPUT=$(timeout 3 sensors 2>/dev/null)
@@ -68,7 +68,7 @@ test_result $MSR_ACCESS "MSR access available"
 
 # Test 4: Integration tests  
 echo
-echo "🔗 Integration Tests:"
+echo "Integration Tests:"
 
 # Performance manager help
 PERF_HELP=$(timeout 5 "$PROJECT_DIR/scripts/performance_manager.sh" --help >/dev/null 2>&1 && echo 0 || echo 1)
@@ -80,7 +80,7 @@ test_result $FREQ_STATUS "CPU Frequency Manager status command"
 
 # Test 5: Hardware-specific tests
 echo
-echo "🖥️ Hardware-Specific Tests:"
+echo "Hardware-Specific Tests:"
 
 if [[ "$CPU_MODEL" == *"Q9550"* ]]; then
     echo -e "${Y}Info:${NC} Core 2 Quad Q9550 detected - running Q9550 tests"
@@ -97,7 +97,7 @@ fi
 
 # Test 6: Safety tests
 echo
-echo "🛡️ Safety Tests:"
+echo "Safety Tests:"
 
 # Invalid frequency rejection
 INVALID_FREQ=$(python3 "$PROJECT_DIR/src/frequency/cpu_frequency_manager.py" set 9999 >/dev/null 2>&1 && echo 1 || echo 0)
@@ -105,7 +105,7 @@ test_result $INVALID_FREQ "Invalid frequency rejection (safety check)"
 
 # Test 7: Documentation tests
 echo
-echo "📖 Documentation Tests:"
+echo "Documentation Tests:"
 
 test_result $(test -f "$PROJECT_DIR/README.md" && echo 0 || echo 1) "README.md exists"
 
@@ -113,16 +113,16 @@ test_result $(test -f "$PROJECT_DIR/PORTFOLIO.md" && echo 0 || echo 1) "PORTFOLI
 
 # Results summary
 echo
-echo "📊 Test Results Summary:"
+echo "Test Results Summary:"
 echo "========================"
 echo -e "Total Tests: $((PASSED + FAILED))"
 echo -e "Passed: ${G}$PASSED${NC}"
 echo -e "Failed: ${R}$FAILED${NC}"
 
 if [[ $FAILED -eq 0 ]]; then
-    echo -e "\n${G}🎉 All tests passed! PowerManagement suite is ready.${NC}"
+    echo -e "\n${G}All tests passed! PowerManagement suite is ready.${NC}"
     exit 0
 else
-    echo -e "\n${R}❌ $FAILED tests failed. Check the issues above.${NC}"
+    echo -e "\n${R}$FAILED tests failed. Check the issues above.${NC}"
     exit 1
 fi
