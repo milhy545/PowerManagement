@@ -1,0 +1,134 @@
+#!/usr/bin/env python3
+"""
+Custom powerprofilesctl replacement
+Compatible command-line interface for our custom power profiles daemon
+"""
+
+import sys
+import dbus
+import argparse
+
+DBUS_SERVICE = 'net.hadess.PowerProfiles'
+DBUS_PATH = '/net/hadess/PowerProfiles'
+DBUS_INTERFACE = 'net.hadess.PowerProfiles'
+
+def get_daemon_interface():
+    """Get D-Bus interface to power profiles daemon"""
+    try:
+        bus = dbus.SystemBus()
+        proxy = bus.get_object(DBUS_SERVICE, DBUS_PATH)
+        return dbus.Interface(proxy, DBUS_INTERFACE)
+    except Exception as e:
+        print(f"Error connecting to power profiles daemon: {e}")
+        sys.exit(1)
+
+def get_properties_interface():
+    """Get D-Bus properties interface"""
+    try:
+        bus = dbus.SystemBus()
+        proxy = bus.get_object(DBUS_SERVICE, DBUS_PATH)
+        return dbus.Interface(proxy, dbus.PROPERTIES_IFACE)
+    except Exception as e:
+        print(f"Error connecting to power profiles daemon: {e}")
+        sys.exit(1)
+
+def list_profiles():
+    """List available power profiles"""
+    try:
+        props = get_properties_interface()
+        profiles = props.Get(DBUS_INTERFACE, 'Profiles')
+        active_profile = props.Get(DBUS_INTERFACE, 'ActiveProfile')
+        
+        for profile_data in profiles:
+            if profile_data and len(profile_data) > 0:
+                profile = profile_data[0]
+                profile_name = profile.get('Profile', 'unknown')
+                driver = profile.get('Driver', 'unknown')
+                
+                if profile_name == active_profile:
+                    print(f"* {profile_name}:")
+                else:
+                    print(f"  {profile_name}:")
+                    
+                print(f"    PlatformDriver: {driver}")
+                print()
+                
+    except Exception as e:
+        print(f"Error listing profiles: {e}")
+        sys.exit(1)
+
+def get_profile():
+    """Get current active profile"""
+    try:
+        props = get_properties_interface()
+        active_profile = props.Get(DBUS_INTERFACE, 'ActiveProfile')
+        print(active_profile)
+    except Exception as e:
+        print(f"Error getting active profile: {e}")
+        sys.exit(1)
+
+def set_profile(profile_name):
+    """Set active power profile"""
+    try:
+        daemon = get_daemon_interface()
+        daemon.SetActiveProfile(profile_name)
+        print(f"Profile set to: {profile_name}")
+    except Exception as e:
+        print(f"Error setting profile to {profile_name}: {e}")
+        sys.exit(1)
+
+def get_version():
+    """Get daemon version"""
+    try:
+        props = get_properties_interface()
+        version = props.Get(DBUS_INTERFACE, 'Version')
+        print(f"Custom Power Profiles Daemon version {version}")
+    except Exception as e:
+        print(f"Error getting version: {e}")
+        sys.exit(1)
+
+def main():
+    """Main function"""
+    parser = argparse.ArgumentParser(
+        description='Custom Power Profiles Control Tool',
+        prog='powerprofilesctl'
+    )
+    
+    subparsers = parser.add_subparsers(dest='command', help='Available commands')
+    
+    # list command
+    list_parser = subparsers.add_parser('list', help='List available power profiles')
+    
+    # get command  
+    get_parser = subparsers.add_parser('get', help='Get current power profile')
+    
+    # set command
+    set_parser = subparsers.add_parser('set', help='Set power profile')
+    set_parser.add_argument('profile', choices=['power-saver', 'balanced', 'performance'],
+                           help='Profile to set')
+    
+    # version command
+    version_parser = subparsers.add_parser('version', help='Show daemon version')
+    
+    # Parse arguments
+    if len(sys.argv) == 1:
+        # Default to list if no arguments
+        list_profiles()
+        return
+        
+    args = parser.parse_args()
+    
+    # Execute commands
+    if args.command == 'list':
+        list_profiles()
+    elif args.command == 'get':
+        get_profile()
+    elif args.command == 'set':
+        set_profile(args.profile)
+    elif args.command == 'version':
+        get_version()
+    else:
+        parser.print_help()
+
+if __name__ == '__main__':
+    main()

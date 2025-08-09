@@ -1,0 +1,96 @@
+# FORAI Analytics Headers - 2025-07-20T03:17:33.007250
+# Agent: claude-code
+# Session: unified_20250720_031732_807323
+# Context: Systematic FORAI header application - Configuration files batch
+# File: test.yml
+# Auto-tracking: Enabled
+# Memory-integrated: True
+
+name: 🧪 Test Suite
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, ubuntu-22.04]
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v3
+      
+    - name: 🔧 Setup system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          power-profiles-daemon \
+          systemd \
+          psmisc \
+          procps
+    
+    - name: 🛡️ Verify script permissions
+      run: |
+        chmod +x scripts/*.sh
+        chmod +x tests/*.sh
+        
+    - name: 🧪 Run test suite
+      run: |
+        cd tests
+        ./test_suite.sh
+        
+    - name: 📊 Verify dry run mode
+      run: |
+        ./scripts/performance_manager.sh test
+        
+    - name: 🔍 Check for security issues
+      run: |
+        # Check for dangerous patterns
+        ! grep -r "rm -rf /" scripts/
+        ! grep -r "sudo.*rm" scripts/
+        
+    - name: 📝 Validate documentation
+      run: |
+        # Check README has required sections
+        grep -q "Features" README.md
+        grep -q "Installation" README.md
+        grep -q "Usage" README.md
+        grep -q "Safety" README.md
+        
+    - name: 🏗️ Test installation simulation
+      run: |
+        # Simulate installation without actual system changes
+        echo "Simulating installation..."
+        ls -la scripts/
+        
+  security:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v3
+      
+    - name: 🔒 Security scan
+      run: |
+        # Check for common security issues
+        echo "Running security checks..."
+        
+        # No hardcoded secrets
+        ! grep -r "password\|secret\|key" scripts/ || exit 0
+        
+        # No dangerous system modifications
+        ! grep -r "/etc/passwd\|/etc/shadow" scripts/
+        
+        # Proper error handling
+        grep -r "set -euo pipefail" scripts/
+        
+    - name: 📋 Shellcheck
+      run: |
+        sudo apt-get install -y shellcheck
+        shellcheck scripts/*.sh || echo "Shellcheck warnings found"

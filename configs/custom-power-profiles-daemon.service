@@ -1,0 +1,31 @@
+[Unit]
+Description=Custom Power Profiles Daemon with AI Agent Integration
+Documentation=man:power-profiles-daemon(1)
+After=multi-user.target graphical.target
+Wants=multi-user.target
+Conflicts=power-profiles-daemon.service
+
+[Service]
+Type=dbus
+BusName=net.hadess.PowerProfiles
+ExecStart=/usr/bin/python3 /home/milhy777/custom-power-profiles-daemon.py
+Restart=on-failure
+RestartSec=1
+User=root
+Group=root
+StandardOutput=journal
+StandardError=journal
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Environment=HOME=/root
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/log /tmp /home/milhy777
+CapabilityBoundingSet=CAP_SYS_ADMIN CAP_DAC_OVERRIDE
+
+[Install]
+WantedBy=multi-user.target
+Alias=power-profiles-daemon.service

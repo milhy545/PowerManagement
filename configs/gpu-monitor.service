@@ -1,0 +1,22 @@
+[Unit]
+Description=GPU Monitor Daemon - Watches for graphics driver issues
+After=graphical.target multi-user.target
+Wants=graphical.target
+
+[Service]
+Type=simple
+User=milhy777
+Group=milhy777
+WorkingDirectory=/home/milhy777
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Environment=HOME=/home/milhy777
+Environment=DISPLAY=:0
+ExecStart=/home/milhy777/gpu-monitor.sh
+ExecStop=/bin/kill -TERM $MAINPID
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target graphical.target

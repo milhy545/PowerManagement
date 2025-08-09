@@ -1,0 +1,19 @@
+[Unit]
+Description=System Recovery Agent - Auto Optimization after Problems
+After=multi-user.target graphical.target
+Wants=multi-user.target
+
+[Service]
+Type=oneshot
+User=milhy777
+Group=milhy777
+WorkingDirectory=/home/milhy777
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Environment=HOME=/home/milhy777
+ExecStart=/home/milhy777/auto-recovery-wrapper.sh
+StandardOutput=journal
+StandardError=journal
+RemainAfterExit=no
+
+[Install]
+WantedBy=multi-user.target
