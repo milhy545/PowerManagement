@@ -629,6 +629,13 @@ show_help() {
 #==============================================================================
 
 main() {
+    # Detect CI environment
+    if [[ "${CI:-false}" == "true" ]]; then
+        log_info "Running in CI environment - some features may be limited"
+        # In CI, skip operations that require hardware access
+        export CI_MODE="true"
+    fi
+    
     # Check if running as root (some operations need sudo)
     if [[ $EUID -eq 0 ]]; then
         log_warning "Running as root - be careful with system changes"

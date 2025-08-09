@@ -42,6 +42,32 @@ safe_exec() {
     return 0
 }
 
+# Safe sudo wrapper for security
+safe_sudo() {
+    local cmd="$1"
+    local timeout_sec="${2:-5}"
+    
+    # In CI mode, skip sudo operations
+    if [[ "${CI:-false}" == "true" ]]; then
+        log "CI Mode: Skipping sudo operation"
+        return 0
+    fi
+    
+    # Check if we have sudo access
+    if ! sudo -n true 2>/dev/null; then
+        log "⚠️ No sudo access for: $cmd"
+        return 1
+    fi
+    
+    # Execute with timeout
+    if timeout "$timeout_sec" sudo bash -c "$cmd" 2>/dev/null; then
+        return 0
+    else
+        log "⚠️ Sudo command failed or timeout: $cmd"
+        return 1
+    fi
+}
+
 # Performance Manager Header
 show_header() {
     echo "⚡ Performance Manager v2.0 - GitHub Ready"
@@ -99,7 +125,7 @@ set_performance_profile() {
     
     # System power profile (safely)
     if command -v powerprofilesctl >/dev/null 2>&1; then
-        if safe_exec "sudo powerprofilesctl set performance" 8; then
+        if safe_sudo "powerprofilesctl set performance" 8; then
             log "✅ System: performance mode set"
         else
             log "⚠️ System: performance mode failed"
@@ -107,7 +133,7 @@ set_performance_profile() {
     fi
     
     # GPU high performance (safely)
-    if safe_exec "echo 'high' | sudo tee /sys/class/drm/card1/device/power_profile >/dev/null" 3; then
+    if safe_sudo "echo 'high' > /sys/class/drm/card1/device/power_profile" 3; then
         log "✅ GPU: high power mode set"
     else
         log "⚠️ GPU: high power mode failed"
@@ -127,7 +153,7 @@ set_performance_profile() {
     ai_pids=$(pgrep -f "claude\|gemini\|python.*telegram" || true)
     if [ -n "$ai_pids" ]; then
         for pid in $ai_pids; do
-            sudo renice 0 "$pid" 2>/dev/null || true
+            renice 0 "$pid" 2>/dev/null || true
         done
         log "✅ AI processes: normal priority"
     fi
@@ -141,7 +167,7 @@ set_balanced_profile() {
     
     # System balanced (safely)
     if command -v powerprofilesctl >/dev/null 2>&1; then
-        if safe_exec "sudo powerprofilesctl set balanced" 8; then
+        if safe_sudo "powerprofilesctl set balanced" 8; then
             log "✅ System: balanced mode set"
         else
             log "⚠️ System: balanced mode failed"
@@ -158,7 +184,7 @@ set_balanced_profile() {
     fi
     
     # GPU default (safely)
-    if safe_exec "echo 'default' | sudo tee /sys/class/drm/card1/device/power_profile >/dev/null" 3; then
+    if safe_sudo "echo 'default' > /sys/class/drm/card1/device/power_profile" 3; then
         log "✅ GPU: default power mode set"
     else
         log "⚠️ GPU: default power mode failed"
@@ -169,7 +195,7 @@ set_balanced_profile() {
     ai_pids=$(pgrep -f "claude\|gemini\|python.*telegram" || true)
     if [ -n "$ai_pids" ]; then
         for pid in $ai_pids; do
-            sudo renice +5 "$pid" 2>/dev/null || true
+            renice +5 "$pid" 2>/dev/null || true
         done
         log "✅ AI processes: lower priority set"
     fi
@@ -183,7 +209,7 @@ set_powersave_profile() {
     
     # System power-saver (safely)
     if command -v powerprofilesctl >/dev/null 2>&1; then
-        if safe_exec "sudo powerprofilesctl set power-saver" 8; then
+        if safe_sudo "powerprofilesctl set power-saver" 8; then
             log "✅ System: power-saver mode set"
         else
             log "⚠️ System: power-saver mode failed"
@@ -200,7 +226,7 @@ set_powersave_profile() {
     fi
     
     # GPU low power (safely)
-    if safe_exec "echo 'low' | sudo tee /sys/class/drm/card1/device/power_profile >/dev/null" 3; then
+    if safe_sudo "echo 'low' > /sys/class/drm/card1/device/power_profile" 3; then
         log "✅ GPU: low power mode set"
     else
         log "⚠️ GPU: low power mode failed"
@@ -211,7 +237,7 @@ set_powersave_profile() {
     ai_pids=$(pgrep -f "claude\|gemini\|python.*telegram" || true)
     if [ -n "$ai_pids" ]; then
         for pid in $ai_pids; do
-            sudo renice +10 "$pid" 2>/dev/null || true
+            renice +10 "$pid" 2>/dev/null || true
         done
         log "✅ AI processes: low priority set"
     fi
@@ -252,7 +278,7 @@ set_emergency_profile() {
     fi
     
     # Kill all related processes first
-    sudo pkill -f "powerprofilesctl" 2>/dev/null || true
+    pkill -f "powerprofilesctl" 2>/dev/null || true
     sleep 1
     
     # Emergency AI cleanup
@@ -262,15 +288,18 @@ set_emergency_profile() {
     
     # Minimal power settings
     if command -v powerprofilesctl >/dev/null 2>&1; then
-        safe_exec "sudo powerprofilesctl set power-saver" 5 || true
+        safe_sudo "powerprofilesctl set power-saver" 5 || true
     fi
     
     # GPU minimum (safely)
-    safe_exec "echo 'low' | sudo tee /sys/class/drm/card1/device/power_profile" 3 || true
+    safe_sudo "echo 'low' > /sys/class/drm/card1/device/power_profile" 3 || true
     
-    # Clear memory
-    sudo sync
-    sudo sh -c 'echo 3 > /proc/sys/vm/drop_caches' 2>/dev/null || true
+    # Clear memory (safe approach)
+    sync
+    # Drop caches only if we have sudo access
+    if [[ "${CI:-false}" != "true" ]] && sudo -n true 2>/dev/null; then
+        sudo sh -c 'echo 3 > /proc/sys/vm/drop_caches' 2>/dev/null || true
+    fi
     
     # Spustit EMERGENCY_CLEANUP fallback
     if [ -f "/home/milhy777/EMERGENCY_CLEANUP.sh" ]; then
