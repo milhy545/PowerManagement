@@ -18,10 +18,10 @@ FAILED=0
 test_result() {
     if [[ $1 -eq 0 ]]; then
         echo -e "${G}✓${NC} $2"
-        ((PASSED++))
+        PASSED=$((PASSED + 1))
     else
         echo -e "${R}✗${NC} $2"
-        ((FAILED++))
+        FAILED=$((FAILED + 1))
     fi
 }
 
@@ -31,23 +31,18 @@ echo "==================================="
 # Test 1: Core files exist
 echo
 echo "📁 File Structure Tests:"
-test_result $(test -f "$PROJECT_DIR/src/frequency/cpu_frequency_manager.py" && echo 0 || echo 1) \
-    "CPU Frequency Manager exists"
+test_result $(test -f "$PROJECT_DIR/src/frequency/cpu_frequency_manager.py" && echo 0 || echo 1) "CPU Frequency Manager exists"
 
-test_result $(test -f "$PROJECT_DIR/scripts/performance_manager.sh" && echo 0 || echo 1) \
-    "Performance Manager exists"
+test_result $(test -f "$PROJECT_DIR/scripts/performance_manager.sh" && echo 0 || echo 1) "Performance Manager exists"
 
-test_result $(test -d "$PROJECT_DIR/examples/ai_workloads" && echo 0 || echo 1) \
-    "AI Workloads examples directory exists"
+test_result $(test -d "$PROJECT_DIR/examples/ai_workloads" && echo 0 || echo 1) "AI Workloads examples directory exists"
 
 # Test 2: Scripts are executable
 echo
 echo "🔧 Executable Tests:"
-test_result $(test -x "$PROJECT_DIR/src/frequency/cpu_frequency_manager.py" && echo 0 || echo 1) \
-    "CPU Frequency Manager is executable"
+test_result $(test -x "$PROJECT_DIR/src/frequency/cpu_frequency_manager.py" && echo 0 || echo 1) "CPU Frequency Manager is executable"
 
-test_result $(test -x "$PROJECT_DIR/scripts/performance_manager.sh" && echo 0 || echo 1) \
-    "Performance Manager is executable"
+test_result $(test -x "$PROJECT_DIR/scripts/performance_manager.sh" && echo 0 || echo 1) "Performance Manager is executable"
 
 # Test 3: Basic functionality
 echo
@@ -55,13 +50,11 @@ echo "⚙️ Functionality Tests:"
 
 # Temperature reading
 TEMP=$(timeout 3 sensors 2>/dev/null | grep "Core 0" | awk '{print $3}' | sed 's/[+°C]//g' | cut -d'.' -f1 2>/dev/null || echo "0")
-test_result $([[ $TEMP -gt 0 && $TEMP -lt 120 ]] && echo 0 || echo 1) \
-    "Temperature sensor reading (${TEMP}°C)"
+test_result $([[ $TEMP -gt 0 && $TEMP -lt 120 ]] && echo 0 || echo 1) "Temperature sensor reading (${TEMP}°C)"
 
 # CPU model detection  
 CPU_MODEL=$(grep "model name" /proc/cpuinfo | head -1 | awk -F': ' '{print $2}' 2>/dev/null || echo "")
-test_result $([[ -n "$CPU_MODEL" ]] && echo 0 || echo 1) \
-    "CPU model detection"
+test_result $([[ -n "$CPU_MODEL" ]] && echo 0 || echo 1) "CPU model detection"
 
 # MSR access
 MSR_ACCESS=$(sudo modprobe msr 2>/dev/null && test -c /dev/cpu/0/msr && echo 0 || echo 1)
@@ -108,11 +101,9 @@ test_result $INVALID_FREQ "Invalid frequency rejection (safety check)"
 echo
 echo "📖 Documentation Tests:"
 
-test_result $(test -f "$PROJECT_DIR/README.md" && echo 0 || echo 1) \
-    "README.md exists"
+test_result $(test -f "$PROJECT_DIR/README.md" && echo 0 || echo 1) "README.md exists"
 
-test_result $(test -f "$PROJECT_DIR/PORTFOLIO.md" && echo 0 || echo 1) \
-    "PORTFOLIO.md exists"
+test_result $(test -f "$PROJECT_DIR/PORTFOLIO.md" && echo 0 || echo 1) "PORTFOLIO.md exists"
 
 # Results summary
 echo
