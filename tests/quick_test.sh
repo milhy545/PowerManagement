@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -x
-
 # Quick Test Suite - Fast validation of core functionality
 
 set -euo pipefail
@@ -51,7 +49,7 @@ echo
 echo "Functionality Tests:"
 
 # Temperature reading
-TEMP_OUTPUT=$(timeout 3 sensors 2>/dev/null)
+TEMP_OUTPUT=$(timeout 3 sensors 2>/dev/null || true)
 if [[ -n "$TEMP_OUTPUT" ]]; then
     TEMP=$(echo "$TEMP_OUTPUT" | grep "Core 0" | awk '{print $3}' | sed 's/[+°C]//g' | cut -d'.' -f1 2>/dev/null || echo "0")
     test_result $([[ $TEMP -gt 0 && $TEMP -lt 120 ]] && echo 0 || echo 1) "Temperature sensor reading (${TEMP}°C)"
