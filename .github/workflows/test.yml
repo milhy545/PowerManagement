@@ -45,6 +45,7 @@ jobs:
       run: |
         chmod +x scripts/*.sh
         chmod +x tests/*.sh
+        chmod +x src/frequency/cpu_frequency_manager.py
         
     - name: 🧪 Run quick test suite
       run: |
