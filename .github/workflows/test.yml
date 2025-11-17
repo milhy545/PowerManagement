@@ -24,7 +24,7 @@ jobs:
     
     steps:
     - name: 📥 Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v5
       
     - name: 🔧 Setup system dependencies
       run: |
@@ -111,7 +111,7 @@ jobs:
     
     steps:
     - name: 📥 Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v5
       
     - name: 🔒 Security scan
       run: |
