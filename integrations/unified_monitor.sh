@@ -18,7 +18,19 @@ NC='\033[0m'
 # Detect installation directories
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 POWER_MGMT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-CLAUDE_MONITOR_DIR="${CLAUDE_MONITOR_DIR:-/home/user/claude-tools-monitor}"
+
+# Auto-detect claude-tools-monitor directory
+if [ -z "${CLAUDE_MONITOR_DIR:-}" ]; then
+    # Try common locations
+    for dir in "$HOME/claude-tools-monitor" "$HOME/projects/claude-tools-monitor" "/opt/claude-tools-monitor"; do
+        if [ -d "$dir" ]; then
+            CLAUDE_MONITOR_DIR="$dir"
+            break
+        fi
+    done
+    # Fallback to HOME if still not set
+    CLAUDE_MONITOR_DIR="${CLAUDE_MONITOR_DIR:-$HOME/claude-tools-monitor}"
+fi
 
 # Python path setup
 export PYTHONPATH="$POWER_MGMT_DIR/src:${PYTHONPATH:-}"
@@ -31,9 +43,9 @@ get_power_metrics() {
     # Get PowerManagement metrics
     local metrics_json
 
-    if ! metrics_json=$(python3 - <<'EOF'
+    if ! metrics_json=$(python3 - <<EOF
 import sys
-sys.path.insert(0, "/home/user/PowerManagement/src")
+sys.path.insert(0, "$POWER_MGMT_DIR/src")
 
 try:
     from sensors.gpu_monitor import UniversalGPUMonitor
