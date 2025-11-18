@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 """
-Smart Thermal Manager - Upgraded Performance Manager
-Kombinuje funkční části starého systému + nové thermal features
+Smart Thermal Manager - Universal Edition
+Adaptive thermal management with hardware-specific thresholds
+Supports Intel (old/new), AMD CPUs with appropriate thermal limits
 """
 
 import os
@@ -11,13 +12,21 @@ import time
 import subprocess
 import threading
 import psutil
+from pathlib import Path
 from dataclasses import dataclass
 from typing import Optional, List
 from enum import Enum
 
+# Add src directory to path for imports
+script_dir = Path(__file__).resolve().parent
+sys.path.insert(0, str(script_dir.parent / "src"))
+
+from hardware.hardware_detector import HardwareDetector
+from config.power_config import PowerConfig
+
 class PowerMode(Enum):
     PERFORMANCE = "performance"
-    BALANCED = "balanced" 
+    BALANCED = "balanced"
     POWER_SAVE = "power-saver"
     EMERGENCY = "emergency"
 
@@ -27,22 +36,34 @@ class SystemStatus:
     cpu_usage: float
     load_avg: float
     power_mode: PowerMode
-    
+
 class SmartThermalManager:
     def __init__(self):
-        # Thermal thresholds (based on working old system)
-        self.comfort_temp = 65    # Below this = performance OK
-        self.warning_temp = 70    # Your old system worked here
-        self.critical_temp = 80   # Where old system dropped load
-        self.emergency_temp = 83  # Shutdown threshold
-        
+        # Detect hardware and get CPU-specific thermal limits
+        self.detector = HardwareDetector()
+        self.cpu_info = self.detector.cpu_info
+
+        # Load configuration
+        self.config = PowerConfig()
+        self.config.set_thermal_config(self.cpu_info.thermal_max_safe)
+
+        # Use adaptive thermal thresholds based on CPU
+        self.comfort_temp = self.config.thermal.comfort_temp
+        self.warning_temp = self.config.thermal.warning_temp
+        self.critical_temp = self.config.thermal.critical_temp
+        self.emergency_temp = self.config.thermal.emergency_temp
+
         # State tracking
         self.current_mode = PowerMode.BALANCED
         self.monitoring = False
         self.escalation_count = 0
-        
+
         # Process tracking for AI workloads
         self.ai_processes = []
+
+        self.log(f"✅ Thermal Manager initialized for {self.cpu_info.model_name}")
+        self.log(f"   Thermal thresholds: {self.comfort_temp}°C / {self.warning_temp}°C / "
+                f"{self.critical_temp}°C / {self.emergency_temp}°C")
         
     def log(self, message):
         timestamp = time.strftime("%H:%M:%S")

@@ -10,11 +10,25 @@
 
 # 🚀 Linux Power Management Suite
 
-**Professional power management tools for Linux systems with safety-first design.**
+**Version 3.0 - Universal Hardware Support**
+
+Professional power management tools for Linux systems with **universal CPU/GPU compatibility**. Originally optimized for Core 2 Quad Q9550, now supports **Intel (Core 2 through Skylake+), AMD (Phenom through Ryzen)**, and multiple GPU vendors.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub Ready](https://img.shields.io/badge/GitHub-Ready-green.svg)](https://github.com)
 [![Tested](https://img.shields.io/badge/Tested-Passing-brightgreen.svg)](tests/)
+[![Universal](https://img.shields.io/badge/Hardware-Universal-blue.svg)](docs/UNIVERSAL_HARDWARE.md)
+
+## 🌍 What's New in V3.0
+
+- ✅ **Universal CPU Support** - Intel (Core 2, i3/i5/i7, Skylake+), AMD (K8, K10, FX, Ryzen)
+- ✅ **Auto GPU Detection** - AMD, NVIDIA, Intel - automatically finds your GPU
+- ✅ **Adaptive Thermal Management** - CPU-specific temperature thresholds (85°C to 100°C)
+- ✅ **No Hardcoded Paths** - Install anywhere, works from any directory
+- ✅ **Portable** - Clone and run on any Linux system
+- ✅ **Backward Compatible** - Original Q9550 optimizations preserved
+
+📖 **[Read Full Universal Hardware Documentation →](docs/UNIVERSAL_HARDWARE.md)**
 
 ## 🎯 Features
 

@@ -1,18 +1,26 @@
 #!/bin/bash
 
-# Performance Manager - Safe Power Management for Linux Systems
-# Version: 2.0 - GitHub Ready
-# Author: Claude AI Assistant
+# Performance Manager - Universal Power Management for Linux Systems
+# Version: 3.0 - Universal Hardware Support
+# Author: PowerManagement Team
 # License: MIT
 
 # Exit on any error for safety
 set -euo pipefail
 
-# Configuration
+# Configuration - Dynamic path detection
 readonly SCRIPT_NAME="$(basename "$0")"
-readonly SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
-readonly LOG_FILE="/tmp/performance_manager.log"
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly INSTALL_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+readonly SRC_DIR="$INSTALL_DIR/src"
+readonly LOG_DIR="${POWER_MGMT_LOG_DIR:-/tmp}"
+readonly LOG_FILE="$LOG_DIR/performance_manager.log"
 readonly MAX_PROCESSES=10
+
+# Dynamic script paths
+readonly CPU_FREQ_MANAGER="$SRC_DIR/frequency/universal_cpu_manager.py"
+readonly AI_MANAGER="$SCRIPT_DIR/ai_process_manager.sh"
+readonly EMERGENCY_CLEANUP="$SCRIPT_DIR/EMERGENCY_CLEANUP.sh"
 
 # Safety check - prevent multiple instances
 check_running_instances() {
@@ -70,9 +78,10 @@ safe_sudo() {
 
 # Performance Manager Header
 show_header() {
-    echo "⚡ Performance Manager v2.0 - GitHub Ready"
-    echo "==========================================="
+    echo "⚡ Performance Manager v3.0 - Universal Edition"
+    echo "==============================================="
     echo "🛡️ Safe mode: Process monitoring enabled"
+    echo "📁 Install: $INSTALL_DIR"
     check_running_instances
 }
 
@@ -89,14 +98,28 @@ get_current_status() {
     echo "  Model: $cpu_model"
     echo "  Current: ${cpu_mhz} MHz (Max: 2833 MHz)"
     
-    # GPU info (safely)
+    # GPU info (safely) - auto-detect GPU card
     echo ""
     echo "🎮 GPU:"
-    local gpu_profile gpu_method
-    gpu_profile=$(cat /sys/class/drm/card1/device/power_profile 2>/dev/null || echo "unknown")
-    gpu_method=$(cat /sys/class/drm/card1/device/power_method 2>/dev/null || echo "unknown")
-    echo "  Power Profile: $gpu_profile"
-    echo "  Power Method: $gpu_method"
+    local gpu_card gpu_profile gpu_method
+    # Find first GPU with power_profile support
+    gpu_card=""
+    for card in /sys/class/drm/card[0-9]; do
+        if [ -f "$card/device/power_profile" 2>/dev/null ]; then
+            gpu_card="$card"
+            break
+        fi
+    done
+
+    if [ -n "$gpu_card" ]; then
+        gpu_profile=$(cat "$gpu_card/device/power_profile" 2>/dev/null || echo "unknown")
+        gpu_method=$(cat "$gpu_card/device/power_method" 2>/dev/null || echo "unknown")
+        echo "  Card: $(basename "$gpu_card")"
+        echo "  Power Profile: $gpu_profile"
+        echo "  Power Method: $gpu_method"
+    else
+        echo "  No GPU with power management found"
+    fi
     
     # Power Profiles (safely)
     echo ""
@@ -132,17 +155,21 @@ set_performance_profile() {
         fi
     fi
     
-    # GPU high performance (safely)
-    if safe_sudo "echo 'high' > /sys/class/drm/card1/device/power_profile" 3; then
-        log "✅ GPU: high power mode set"
-    else
-        log "⚠️ GPU: high power mode failed"
-    fi
-    
-    # CPU frequency to maximum (safely)
-    if [ -f "$SCRIPT_DIR/../src/frequency/cpu_frequency_manager.py" ]; then
-        if safe_exec "python3 '$SCRIPT_DIR/../src/frequency/cpu_frequency_manager.py' thermal performance" 10; then
-            log "✅ CPU: performance frequency set (2.83GHz)"
+    # GPU high performance (safely) - auto-detect GPU
+    local gpu_card
+    for card in /sys/class/drm/card[0-9]; do
+        if [ -f "$card/device/power_profile" 2>/dev/null ]; then
+            if safe_sudo "echo 'high' > $card/device/power_profile" 3; then
+                log "✅ GPU: high power mode set ($(basename "$card"))"
+            fi
+            break
+        fi
+    done
+
+    # CPU frequency to maximum (universal manager)
+    if [ -f "$CPU_FREQ_MANAGER" ]; then
+        if safe_exec "python3 '$CPU_FREQ_MANAGER' profile performance" 10; then
+            log "✅ CPU: performance frequency set"
         else
             log "⚠️ CPU: frequency control failed"
         fi
@@ -174,21 +201,25 @@ set_balanced_profile() {
         fi
     fi
     
-    # CPU frequency to balanced (safely)  
-    if [ -f "$SCRIPT_DIR/../src/frequency/cpu_frequency_manager.py" ]; then
-        if safe_exec "python3 '$SCRIPT_DIR/../src/frequency/cpu_frequency_manager.py' thermal balanced" 10; then
-            log "✅ CPU: balanced frequency set (2.16GHz)"
+    # CPU frequency to balanced (universal manager)
+    if [ -f "$CPU_FREQ_MANAGER" ]; then
+        if safe_exec "python3 '$CPU_FREQ_MANAGER' profile balanced" 10; then
+            log "✅ CPU: balanced frequency set"
         else
             log "⚠️ CPU: frequency control failed"
         fi
     fi
-    
-    # GPU default (safely)
-    if safe_sudo "echo 'default' > /sys/class/drm/card1/device/power_profile" 3; then
-        log "✅ GPU: default power mode set"
-    else
-        log "⚠️ GPU: default power mode failed"
-    fi
+
+    # GPU default (safely) - auto-detect GPU
+    local gpu_card
+    for card in /sys/class/drm/card[0-9]; do
+        if [ -f "$card/device/power_profile" 2>/dev/null ]; then
+            if safe_sudo "echo 'default' > $card/device/power_profile" 3; then
+                log "✅ GPU: default power mode set ($(basename "$card"))"
+            fi
+            break
+        fi
+    done
     
     # AI processes slightly lower priority
     local ai_pids
@@ -216,21 +247,25 @@ set_powersave_profile() {
         fi
     fi
     
-    # CPU frequency to power save (safely)
-    if [ -f "$SCRIPT_DIR/../src/frequency/cpu_frequency_manager.py" ]; then
-        if safe_exec "python3 '$SCRIPT_DIR/../src/frequency/cpu_frequency_manager.py' thermal power_save" 10; then
-            log "✅ CPU: power save frequency set (1.66GHz)"
+    # CPU frequency to power save (universal manager)
+    if [ -f "$CPU_FREQ_MANAGER" ]; then
+        if safe_exec "python3 '$CPU_FREQ_MANAGER' profile powersave" 10; then
+            log "✅ CPU: power save frequency set"
         else
             log "⚠️ CPU: frequency control failed"
         fi
     fi
-    
-    # GPU low power (safely)
-    if safe_sudo "echo 'low' > /sys/class/drm/card1/device/power_profile" 3; then
-        log "✅ GPU: low power mode set"
-    else
-        log "⚠️ GPU: low power mode failed"
-    fi
+
+    # GPU low power (safely) - auto-detect GPU
+    local gpu_card
+    for card in /sys/class/drm/card[0-9]; do
+        if [ -f "$card/device/power_profile" 2>/dev/null ]; then
+            if safe_sudo "echo 'low' > $card/device/power_profile" 3; then
+                log "✅ GPU: low power mode set ($(basename "$card"))"
+            fi
+            break
+        fi
+    done
     
     # AI processes lower priority
     local ai_pids
@@ -248,66 +283,55 @@ set_powersave_profile() {
 # Emergency safe mode
 set_emergency_profile() {
     log "🚨 Setting EMERGENCY profile..."
-    
-    # 🤖 SPUSTIT SYSTEM-OPTIMIZER-GUARDIAN AGENTA
-    if command -v claude >/dev/null 2>&1; then
-        log "🤖 LAUNCHING System-Optimizer-Guardian Agent for Emergency"
-        claude --agent system-optimizer-guardian \
-            "EMERGENCY MODE ACTIVATED! Systém detekoval kritické problémy. 
-            Proveď okamžitou emergency optimalizaci:
-            1. Zabij všechny problémové procesy a memory leaks
-            2. Vyčisti high system load a frozen aplikace
-            3. Nastav minimální power consumption pro všechny komponenty
-            4. Zkontroluj a oprav GPU/thermal/CPU throttling
-            5. Aktivuj nejstabilnější emergency power profil
-            6. Proveď system health check a memory cleanup
-            Používaj emergency skripty z /home/milhy777/ pro kritické situace.
-            Fokus na STABILITU a minimální resource usage!" &
-        log "🤖 Emergency Agent spuštěn na pozadí pro komplexní recovery"
-    else
-        log "⚠️ Claude agent nedostupný, spouštím standardní emergency"
-    fi
-    
+
     # CPU frequency to emergency minimum (FIRST - most important)
-    if [ -f "$SCRIPT_DIR/../src/frequency/cpu_frequency_manager.py" ]; then
-        if safe_exec "python3 '$SCRIPT_DIR/../src/frequency/cpu_frequency_manager.py' thermal emergency" 10; then
-            log "✅ CPU: EMERGENCY frequency set (1.33GHz)"
+    if [ -f "$CPU_FREQ_MANAGER" ]; then
+        if safe_exec "python3 '$CPU_FREQ_MANAGER' profile emergency" 10; then
+            log "✅ CPU: EMERGENCY frequency set to minimum"
         else
             log "⚠️ CPU: emergency frequency control failed"
         fi
     fi
-    
+
     # Kill all related processes first
     pkill -f "powerprofilesctl" 2>/dev/null || true
     sleep 1
-    
+
     # Emergency AI cleanup
-    if [ -f "$SCRIPT_DIR/ai_process_manager.sh" ]; then
-        "$SCRIPT_DIR/ai_process_manager.sh" emergency || true
+    if [ -f "$AI_MANAGER" ]; then
+        "$AI_MANAGER" emergency || true
     fi
-    
+
     # Minimal power settings
     if command -v powerprofilesctl >/dev/null 2>&1; then
         safe_sudo "powerprofilesctl set power-saver" 5 || true
     fi
-    
-    # GPU minimum (safely)
-    safe_sudo "echo 'low' > /sys/class/drm/card1/device/power_profile" 3 || true
-    
+
+    # GPU minimum (safely) - auto-detect GPU
+    local gpu_card
+    for card in /sys/class/drm/card[0-9]; do
+        if [ -f "$card/device/power_profile" 2>/dev/null ]; then
+            if safe_sudo "echo 'low' > $card/device/power_profile" 3; then
+                log "✅ GPU: emergency low power mode set ($(basename "$card"))"
+            fi
+            break
+        fi
+    done
+
     # Clear memory (safe approach)
     sync
     # Drop caches only if we have sudo access
     if [[ "${CI:-false}" != "true" ]] && sudo -n true 2>/dev/null; then
         sudo sh -c 'echo 3 > /proc/sys/vm/drop_caches' 2>/dev/null || true
     fi
-    
-    # Spustit EMERGENCY_CLEANUP fallback
-    if [ -f "/home/milhy777/EMERGENCY_CLEANUP.sh" ]; then
-        log "🧹 Spouštím emergency cleanup jako fallback"
-        /home/milhy777/EMERGENCY_CLEANUP.sh &
+
+    # Run EMERGENCY_CLEANUP if available
+    if [ -f "$EMERGENCY_CLEANUP" ]; then
+        log "🧹 Running emergency cleanup"
+        "$EMERGENCY_CLEANUP" &
     fi
-    
-    log "🚨 EMERGENCY MODE - Minimal power to prevent blackscreen"
+
+    log "🚨 EMERGENCY MODE - Minimal power to prevent thermal shutdown"
     echo "🚨 EMERGENCY MODE - System stabilized"
 }
 
