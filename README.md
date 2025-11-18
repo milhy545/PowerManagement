@@ -119,6 +119,47 @@ python3 examples/ai_workloads/final_mycoder_test.py        # Thermal-protected A
 python3 examples/ai_workloads/ultra_safe_mycoder.py        # Ultra-safe AI demo
 ```
 
+## 🔗 Integrations
+
+PowerManagement integrates with other system tools for a unified monitoring experience:
+
+### MyMenu Integration (dmenu)
+```bash
+# Add PowerManagement to MyMenu dmenu launcher
+bash integrations/mymenu_patch.sh /path/to/MyMenu
+
+# Provides:
+# - 🌡️ Power & Thermal category
+# - Quick access to power profiles
+# - GPU and sensor monitoring
+# - Fan control submenu
+```
+
+### claude-tools-monitor Integration
+```bash
+# Monitor system metrics during Claude AI sessions
+cp integrations/power_integration.py /path/to/claude-tools-monitor/integrations/
+
+# Features:
+# - Real-time CPU/GPU temperature logging
+# - Thermal throttling protection
+# - Power consumption tracking
+```
+
+### Unified Dashboard
+```bash
+# Launch unified monitoring dashboard
+bash integrations/unified_monitor.sh
+
+# Shows:
+# - PowerManagement metrics (CPU/GPU temps, fans, power)
+# - Claude monitor status
+# - Real-time thermal alerts
+# - Interactive menu system
+```
+
+📖 **[Complete Integration Guide →](docs/INTEGRATIONS.md)**
+
 ## 🛡️ Safety Features
 
 - **Process Limit Monitoring** - Prevents fork bombs (max 10 instances)
