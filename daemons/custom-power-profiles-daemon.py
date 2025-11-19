@@ -11,11 +11,18 @@ import signal
 import subprocess
 import time
 import logging
+from pathlib import Path
 from threading import Thread
 import dbus
 import dbus.service
 import dbus.mainloop.glib
 from gi.repository import GLib
+
+# Add src directory to path for imports
+daemon_dir = Path(__file__).resolve().parent
+sys.path.insert(0, str(daemon_dir.parent / "src"))
+
+from config.power_config import PowerConfig
 
 # Logging setup
 logging.basicConfig(
@@ -44,7 +51,10 @@ class CustomPowerProfilesDaemon(dbus.service.Object):
         self.bus = dbus.SystemBus()
         bus_name = dbus.service.BusName(self.DBUS_SERVICE, self.bus)
         dbus.service.Object.__init__(self, bus_name, self.DBUS_PATH)
-        
+
+        # Load configuration with dynamic paths
+        self.config = PowerConfig()
+
         # Power profiles state
         self.active_profile = "balanced"
         self.profiles = [
@@ -54,30 +64,39 @@ class CustomPowerProfilesDaemon(dbus.service.Object):
                 "Driver": "platform_profile"
             },
             {
-                "Profile": "balanced", 
+                "Profile": "balanced",
                 "PlatformDriver": "platform_profile",
                 "Driver": "platform_profile"
             },
             {
                 "Profile": "performance",
-                "PlatformDriver": "platform_profile", 
+                "PlatformDriver": "platform_profile",
                 "Driver": "platform_profile"
             }
         ]
-        
+
         self.holds = []
         self.performance_degraded = ""
         self.performance_inhibited = ""
         self.actions = ["trickle_charge", "ai_optimization", "emergency_mode"]
-        self.version = "2.0-custom"
-        
-        # Performance manager script paths
-        self.performance_script = "/home/milhy777/performance_manager.sh"
-        self.ai_manager_script = "/home/milhy777/ai_process_manager.sh"
-        self.emergency_script = "/home/milhy777/EMERGENCY_CLEANUP.sh"
-        
-        log.info("🤖 Custom Power Profiles Daemon initialized")
+        self.version = "3.0-universal"  # Updated version
+
+        # Get script paths from configuration
+        self.performance_script = self.config.get_script_path("performance_manager")
+        self.ai_manager_script = self.config.get_script_path("ai_process_manager")
+        self.emergency_script = self.config.get_script_path("emergency_cleanup")
+
+        log.info("🤖 Custom Power Profiles Daemon initialized (Universal Edition)")
         log.info(f"📋 Available profiles: {[p['Profile'] for p in self.profiles]}")
+        log.info(f"📁 Install directory: {self.config.paths.install_dir}")
+
+        # Warn if scripts not found
+        if not self.performance_script:
+            log.warning("⚠️  Performance manager script not found")
+        if not self.ai_manager_script:
+            log.warning("⚠️  AI manager script not found")
+        if not self.emergency_script:
+            log.warning("⚠️  Emergency cleanup script not found")
         
     # D-Bus Properties
     @dbus.service.method(DBUS_INTERFACE, in_signature='', out_signature='as')
@@ -199,36 +218,30 @@ class CustomPowerProfilesDaemon(dbus.service.Object):
     
     def _execute_profile_change(self, profile):
         """Execute the actual profile change using our scripts"""
+        if not self.performance_script:
+            log.error("❌ Performance manager script not available")
+            return
+
         try:
             if profile == "performance":
                 log.info("🔥 Executing PERFORMANCE profile")
-                subprocess.run([self.performance_script, "performance"], 
+                subprocess.run([self.performance_script, "performance"],
                              timeout=30, capture_output=True)
-                             
-            elif profile == "balanced":  
+
+            elif profile == "balanced":
                 log.info("⚖️ Executing BALANCED profile")
                 subprocess.run([self.performance_script, "balanced"],
                              timeout=30, capture_output=True)
-                             
+
             elif profile == "power-saver":
-                log.info("🔋 Executing POWER-SAVER profile") 
+                log.info("🔋 Executing POWER-SAVER profile")
                 subprocess.run([self.performance_script, "powersave"],
                              timeout=30, capture_output=True)
-                             
-            # Trigger System-Optimizer-Guardian Agent for optimization
-            if os.path.exists("/usr/local/bin/claude"):
-                log.info("🤖 Triggering System-Optimizer-Guardian Agent")
-                agent_cmd = [
-                    "claude", "--agent", "system-optimizer-guardian",
-                    f"Power profile changed to {profile}. Optimize system accordingly: "
-                    f"1. Apply {profile} optimizations 2. Check system load "
-                    f"3. Optimize GPU/CPU states 4. Clear caches if needed "
-                    f"5. Monitor thermal conditions"
-                ]
-                subprocess.Popen(agent_cmd)
-                
+
         except subprocess.TimeoutExpired:
             log.error(f"⚠️ Profile change timeout for {profile}")
+        except FileNotFoundError:
+            log.error(f"❌ Script not found: {self.performance_script}")
         except Exception as e:
             log.error(f"❌ Profile change failed for {profile}: {e}")
 

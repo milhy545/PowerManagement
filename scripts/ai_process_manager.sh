@@ -16,18 +16,20 @@ set -euo pipefail  # Exit on error, undefined vars, pipe failures
 # CONFIGURATION CONSTANTS
 #==============================================================================
 
-readonly SCRIPT_NAME="AI Process Manager v2.0"
-readonly VERSION="2.0.0"
+readonly SCRIPT_NAME="AI Process Manager v3.0"
+readonly VERSION="3.0.0"
 
-# Temperature thresholds (Celsius)
+# Temperature thresholds (Celsius) - will be adjusted based on CPU
 readonly TEMP_WARNING_THRESHOLD=75
 readonly TEMP_CRITICAL_THRESHOLD=79
 
 # Process patterns to monitor
 readonly AI_PROCESS_PATTERNS="claude|gemini|anthropic|python.*telegram|node.*claude"
 
-# Paths
-readonly POWER_MANAGER_PATH="/home/milhy777/Develop/Production/PowerManagement/scripts/performance_manager.sh"
+# Paths - Dynamic detection
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly INSTALL_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+readonly POWER_MANAGER_PATH="$SCRIPT_DIR/performance_manager.sh"
 readonly THERMAL_ZONE="/sys/class/thermal/thermal_zone0/temp"
 
 # Colors for output

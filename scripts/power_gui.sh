@@ -7,7 +7,8 @@ set -euo pipefail
 
 readonly SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 readonly PERFORMANCE_SCRIPT="$SCRIPT_DIR/performance_manager.sh"
-readonly AI_SCRIPT="/home/milhy777/ai_process_manager.sh"
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly AI_SCRIPT="$SCRIPT_DIR/ai_process_manager.sh"
 readonly CONFIG_DIR="$HOME/.config/power-management-gui"
 readonly CONFIG_FILE="$CONFIG_DIR/settings.conf"
 
