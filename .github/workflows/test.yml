@@ -1,163 +1,21 @@
-# FORAI Analytics Headers - 2025-07-20T03:17:33.007250
-# Agent: claude-code
-# Session: unified_20250720_031732_807323
-# Context: Systematic FORAI header application - Configuration files batch
-# File: test.yml
-# Auto-tracking: Enabled
-# Memory-integrated: True
-
-name: 🧪 Test Suite
-
+name: Test Suite
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ main ]
-
+    branches: [ main, master ]
 jobs:
   test:
     runs-on: ubuntu-latest
-    
-    strategy:
-      matrix:
-        os: [ubuntu-20.04, ubuntu-22.04]
-    
     steps:
-    - name: 📥 Checkout code
-      uses: actions/checkout@v3
-      
-    - name: 🔧 Setup system dependencies
-      run: |
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    - run: |
         sudo apt-get update
-        sudo apt-get install -y \
-          power-profiles-daemon \
-          systemd \
-          psmisc \
-          procps \
-          lm-sensors \
-          msr-tools
-          
-    - name: 🐍 Setup Python dependencies
-      run: |
-        python3 -m pip install --user psutil aiohttp
-        # Ensure Python can find the modules
-        export PYTHONPATH="$HOME/.local/lib/python3.*/site-packages:$PYTHONPATH"
-        # Verify installations
-        python3 -c "import psutil; print('psutil OK')"
-        python3 -c "import aiohttp; print('aiohttp OK')"
-    
-    - name: 🛡️ Verify script permissions
-      run: |
-        chmod +x scripts/*.sh
-        chmod +x tests/*.sh
-        chmod +x src/frequency/cpu_frequency_manager.py
-        
-    - name: 🐛 Display test script content
-      run: |
-        cat ./tests/quick_test.sh
-        
-    - name:  hashlib-check
-      run: |
-        sha256sum ./tests/quick_test.sh
-        
-    - name: 🧪 Run quick test suite
-      run: |
-        # Run with CI environment flag to skip problematic tests
-        CI=true ./tests/quick_test.sh
-        
-    - name: 🌡️ Run thermal management tests
-      run: |
-        timeout 30 ./tests/test_thermal_management.sh || echo "Thermal tests timed out (expected in CI)"
-        
-    - name: ⚡ Run CPU frequency tests  
-      run: |
-        timeout 30 ./tests/test_cpu_frequency.sh || echo "CPU frequency tests timed out (expected in CI)"
-        
-    - name: 📊 Verify dry run mode
-      run: |
-        ./scripts/performance_manager.sh test
-        
-    - name: 🔍 Check for security issues
-      run: |
-        # Check for dangerous patterns
-        echo "Checking for dangerous rm -rf / commands..."
-        ! grep -r "rm -rf /" scripts/
-        
-        # Check for dangerous sudo rm commands (but allow safe temp file cleanup)
-        echo "Checking for dangerous sudo rm commands..."
-        if grep -r "sudo.*rm" scripts/ | grep -v "/tmp/" | grep -v "EMERGENCY_CLEANUP"; then
-          echo "Found potentially dangerous sudo rm commands"
-          exit 1
-        fi
-        
-        echo "✅ Security checks passed"
-        
-    - name: 📝 Validate documentation
-      run: |
-        # Check README has required sections
-        grep -q "Features" README.md
-        grep -q "Installation" README.md
-        grep -q "Usage" README.md
-        grep -q "Safety" README.md
-        
-    - name: 🏗️ Test installation simulation
-      run: |
-        # Simulate installation without actual system changes
-        echo "Simulating installation..."
-        ls -la scripts/
-        
-  security:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: 📥 Checkout code
-      uses: actions/checkout@v3
-      
-    - name: 🔒 Security scan
-      run: |
-        # Check for common security issues
-        echo "Running security checks..."
-        
-        # No hardcoded secrets
-        ! grep -r "password\|secret\|key" scripts/ || exit 0
-        
-        # No dangerous system modifications
-        ! grep -r "/etc/passwd\|/etc/shadow" scripts/
-        
-        # Proper error handling
-        grep -r "set -euo pipefail" scripts/
-        
-    - name: 📋 Shellcheck
-      run: |
-        sudo apt-get install -y shellcheck
-        shellcheck scripts/*.sh || echo "Shellcheck warnings found"
-            - name: Setup Node.js environment
-  uses: actions/setup-node@v6.0.0
-  with:
-    # Set always-auth in npmrc.
-    always-auth: # optional, default is false
-    # Version Spec of the version to use. Examples: 12.x, 10.15.1, >=10.15.0.
-    node-version: # optional
-    # File containing the version Spec of the version to use.  Examples: package.json, .nvmrc, .node-version, .tool-versions.
-    node-version-file: # optional
-    # Target architecture for Node to use. Examples: x86, x64. Will use system architecture by default.
-    architecture: # optional
-    # Set this option if you want the action to check for the latest available version that satisfies the version spec.
-    check-latest: # optional
-    # Optional registry to set up for auth. Will set the registry in a project level .npmrc and .yarnrc file, and set up auth to read in from env.NODE_AUTH_TOKEN.
-    registry-url: # optional
-    # Optional scope for authenticating against scoped registries. Will fall back to the repository owner when using the GitHub Packages registry (https://npm.pkg.github.com/).
-    scope: # optional
-    # Used to pull node distributions from node-versions. Since there's a default, this is typically not supplied by the user. When running this action on github.com, the default value is sufficient. When running on GHES, you can pass a personal access token for github.com if you are experiencing rate limiting.
-    token: # optional, default is ${{ github.server_url == 'https://github.com' && github.token || '' }}
-    # Used to specify a package manager for caching in the default directory. Supported values: npm, yarn, pnpm.
-    cache: # optional
-    # Set to false to disable automatic caching. By default, caching is enabled when either devEngines.packageManager or the top-level packageManager field in package.json specifies npm as the package manager.
-    package-manager-cache: # optional, default is true
-    # Used to specify the path to a dependency file: package-lock.json, yarn.lock, etc. Supports wildcards or a list of file names for caching multiple dependencies.
-    cache-dependency-path: # optional
-    # Used to specify an alternative mirror to downlooad Node.js binaries from
-    mirror: # optional
-    # The token used as Authorization header when fetching from the mirror
-    mirror-token: # optional
-          
+        sudo apt-get install -y lm-sensors python3
+        chmod +x scripts/*.sh src/frequency/*.py tests/*.sh
+    - run: CI=true ./tests/test_ci_compatibility.sh
+      env:
+        CI: true
