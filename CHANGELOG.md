@@ -173,3 +173,9 @@ See [INTEGRATION_PLAN.md](docs/INTEGRATION_PLAN.md) for detailed roadmap.
 - Historical metrics database
 - Machine learning thermal predictions
 - Custom fan curves per application
+## [2.0.0] - 2025-01-20
+- Installation script
+- Configuration file
+- Complete documentation
+- CI fixes
+- Type hints
