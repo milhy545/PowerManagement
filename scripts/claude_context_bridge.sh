@@ -13,8 +13,9 @@
 
 set -euo pipefail
 
-readonly SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
-readonly TELEGRAM_BOT_DIR="/home/milhy777/Develop/claude-code-telegram"
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Optional: Configure Telegram bot directory if you have claude-code-telegram installed
+readonly TELEGRAM_BOT_DIR="${TELEGRAM_BOT_DIR:-$HOME/claude-code-telegram}"
 readonly CONTEXT_SHARE_DIR="/tmp/claude-context-bridge"
 readonly CLI_SESSIONS_DIR="$HOME/.claude"
 readonly BOT_DB_PATH="$TELEGRAM_BOT_DIR/data/bot.db"

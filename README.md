@@ -10,11 +10,35 @@
 
 # 🚀 Linux Power Management Suite
 
-**Professional power management tools for Linux systems with safety-first design.**
+**Version 3.1 - Professional Monitoring & Fan Control**
+
+Professional power management with **universal CPU/GPU compatibility**, **advanced sensor monitoring**, and **intelligent fan control**. Works on Intel, AMD, NVIDIA GPUs, and atypical systems including all-in-one PCs.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub Ready](https://img.shields.io/badge/GitHub-Ready-green.svg)](https://github.com)
 [![Tested](https://img.shields.io/badge/Tested-Passing-brightgreen.svg)](tests/)
+[![Universal](https://img.shields.io/badge/Hardware-Universal-blue.svg)](docs/UNIVERSAL_HARDWARE.md)
+
+## 🌟 What's New in V3.1
+
+- 🎮 **GPU Monitoring** - Real-time temp, fan, power (NVIDIA/AMD/Intel)
+- 🔍 **Universal Sensors** - ALL sensors including atypical motherboards
+- 💨 **Fan Control** - PWM control for CPU & GPU with auto-adjustment
+- 📊 **Monitoring Service** - Professional daemon with alerts & JSON logging
+- 🏭 **All-in-One Support** - Works on difficult configs (Acer, Dell AIO)
+
+📖 **[Advanced Sensor Monitoring Guide →](docs/SENSOR_MONITORING.md)**
+
+## 🌍 What's New in V3.0
+
+- ✅ **Universal CPU Support** - Intel (Core 2, i3/i5/i7, Skylake+), AMD (K8, K10, FX, Ryzen)
+- ✅ **Auto GPU Detection** - AMD, NVIDIA, Intel - automatically finds your GPU
+- ✅ **Adaptive Thermal Management** - CPU-specific temperature thresholds
+- ✅ **No Hardcoded Paths** - Install anywhere, works from any directory
+- ✅ **Portable** - Clone and run on any Linux system
+- ✅ **Backward Compatible** - Original Q9550 optimizations preserved
+
+📖 **[Universal Hardware Documentation →](docs/UNIVERSAL_HARDWARE.md)**
 
 ## 🎯 Features
 
@@ -94,6 +118,47 @@ python3 src/frequency/cpu_frequency_manager.py set 1666
 python3 examples/ai_workloads/final_mycoder_test.py        # Thermal-protected AI test
 python3 examples/ai_workloads/ultra_safe_mycoder.py        # Ultra-safe AI demo
 ```
+
+## 🔗 Integrations
+
+PowerManagement integrates with other system tools for a unified monitoring experience:
+
+### MyMenu Integration (dmenu)
+```bash
+# Add PowerManagement to MyMenu dmenu launcher
+bash integrations/mymenu_patch.sh /path/to/MyMenu
+
+# Provides:
+# - 🌡️ Power & Thermal category
+# - Quick access to power profiles
+# - GPU and sensor monitoring
+# - Fan control submenu
+```
+
+### claude-tools-monitor Integration
+```bash
+# Monitor system metrics during Claude AI sessions
+cp integrations/power_integration.py /path/to/claude-tools-monitor/integrations/
+
+# Features:
+# - Real-time CPU/GPU temperature logging
+# - Thermal throttling protection
+# - Power consumption tracking
+```
+
+### Unified Dashboard
+```bash
+# Launch unified monitoring dashboard
+bash integrations/unified_monitor.sh
+
+# Shows:
+# - PowerManagement metrics (CPU/GPU temps, fans, power)
+# - Claude monitor status
+# - Real-time thermal alerts
+# - Interactive menu system
+```
+
+📖 **[Complete Integration Guide →](docs/INTEGRATIONS.md)**
 
 ## 🛡️ Safety Features
 
